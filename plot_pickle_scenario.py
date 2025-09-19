@@ -283,8 +283,9 @@ for k, p in itertools.product(range(3), repeat=2):
     for i, s in enumerate(population):
         y     = true_res_01[key][s]       # valeur vraie pour s
         pos1  = 2*i + 1                       # s-G
-        pos2  = 2*i + 2                       # s-IPW
-        ax[k, p].hlines(y=y, xmin=pos1-0.3, xmax=pos2+0.3,
+        pos2  = 2*i + 2      
+        pos3 = 2*i +3                # s-IPW
+        ax[k, p].hlines(y=y, xmin=pos1-0.3, xmax=pos3+0.3,
                         colors=col_s[i], linestyles="--")
 
     latex_text = r"$\hat{{\mathbb{{E}}}} \left[Y(a=0, k={}, M(a^*=1, p={})) \mid S=j\right]$".format(k, p)

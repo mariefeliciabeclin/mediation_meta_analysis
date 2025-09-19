@@ -4,7 +4,8 @@ from math import *
 import statsmodels.api as sm
 from scipy.optimize import minimize
 
-from data_generation.simu_data_scenario_2  import simulate
+from data_generation.simu_data_scenario_3  import simulate
+from src.population_model_xgboost import population_model
 
 from scipy.optimize import root
 
@@ -48,50 +49,8 @@ from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
 
 
 
-MODEL_SCIKIT = dict({"logistic_reg" : LogisticRegression, 
-                    "linear_reg" :  LinearRegression, 
-                    "rf_classifier" :  RandomForestClassifier , 
-                    "rf_regressor" :RandomForestRegressor })
 
-
-
-def g_formula(j, k, p, a, astar, data_all, outcome_algo, mediator_algo):
-
-    def outcome_model(c,m,a):
-        model = MODEL_SCIKIT[outcome_algo]()
-        model.fit(X=data_all[k][["C", "M", "A"]], y=data_all[k]["Y"])
-        return model.predict(np.array([[c, m, a]]))[0]
-
-    def mediator_model(c,a):
-        model = MODEL_SCIKIT[mediator_algo]()
-        model.fit(X=data_all[p][["C", "A"]], y=data_all[p]["M"])
-        return model.predict_proba(np.array([[c, a]]))[0][1] 
-
-    C = data_all[j]["C"]
-
-    g_hat_1 = [outcome_model(c=c,m=1, a=a)  for c in C]
-    g_hat_1 = [outcome_model(c=c,m=0, a=a)  for c in C]
-    
-    proba_m = [mediator_model(c=c,a=astar)  for c in C]
-    gf = np.mean(g_hat_0*(1-proba_m)+g_hat_1*(proba_m))
-    return gf
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-def IPW(j, k, p, a, astar, data_all, e=None, e_2=None, clip_status=False):
+def IPW_parametric(j, k, p, a, astar, data_all, e=None, e_2=None, clip_status=False, population_algo="parametric"):
     n_k = len(data_all[k])
     n_j = len(data_all[j])
 
@@ -158,12 +117,22 @@ def IPW(j, k, p, a, astar, data_all, e=None, e_2=None, clip_status=False):
         e_2 = np.mean(data_all[j]['C']**(2))
 
   
-    gamma_optim= gamma_without_IPD(data_all=data_all, j=j,k=k, e=e, e_2=e_2, pj=pj)
-    print(gamma_optim.success)
-    print(gamma_optim)
-    gamma = np.array(gamma_optim['x'])
-    print('gamma_'+str(j)+str(k))
-    print(gamma)
+    
+
+    if population_algo == "parametric":
+        gamma_optim= gamma_without_IPD(data_all=data_all, j=j,k=k, e=e, e_2=e_2, pj=pj)
+        print(gamma_optim.success)
+        print(gamma_optim)
+        gamma = np.array(gamma_optim['x'])
+        print('gamma_'+str(j)+str(k))
+        
+        def model_pop(c):
+            return m_exp_model(gamma, c)
+
+    elif population_algo == "xgboost":
+        model_pop = population_model(data_all=data_all, k =k,e=e, e_2=e_2)
+
+
     res = 0
     for i in range(n_k):
         if data_all[k]["A"].iloc[i]==a:
@@ -173,7 +142,7 @@ def IPW(j, k, p, a, astar, data_all, e=None, e_2=None, clip_status=False):
             if j==k:
                 y_w = y_w*(mediator_model_population_p(a=astar, c=c,m=m, clip_status=clip_status )/mediator_model_population_k(a=a, c=c,m=m, clip_status=clip_status ))
             else :
-                y_w = y_w*(mediator_model_population_p(a=astar, c=c,m=m, clip_status=clip_status  )/mediator_model_population_k(a=a, c=c,m=m, clip_status=clip_status ))*  m_exp_model(gamma, c)
+                y_w = y_w*(mediator_model_population_p(a=astar, c=c,m=m, clip_status=clip_status  )/mediator_model_population_k(a=a, c=c,m=m, clip_status=clip_status ))* model_pop(c)
 
             res = res + y_w
     res = res/n_j
