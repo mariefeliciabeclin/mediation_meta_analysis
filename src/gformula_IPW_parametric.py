@@ -43,6 +43,54 @@ def g_formula_parametric(j, k, p, a, astar, data_all):
     return gf
 
 
+from sklearn.linear_model import LogisticRegression, LinearRegression
+from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
+
+
+
+MODEL_SCIKIT = dict({"logistic_reg" : LogisticRegression, 
+                    "linear_reg" :  LinearRegression, 
+                    "rf_classifier" :  RandomForestClassifier , 
+                    "rf_regressor" :RandomForestRegressor })
+
+
+
+def g_formula(j, k, p, a, astar, data_all, outcome_algo, mediator_algo):
+
+    def outcome_model(c,m,a):
+        model = MODEL_SCIKIT[outcome_algo]()
+        model.fit(X=data_all[k][["C", "M", "A"]], y=data_all[k]["Y"])
+        return model.predict(np.array([[c, m, a]]))[0]
+
+    def mediator_model(c,a):
+        model = MODEL_SCIKIT[mediator_algo]()
+        model.fit(X=data_all[p][["C", "A"]], y=data_all[p]["M"])
+        return model.predict_proba(np.array([[c, a]]))[0][1] 
+
+    C = data_all[j]["C"]
+
+    g_hat_1 = [outcome_model(c=c,m=1, a=a)  for c in C]
+    g_hat_1 = [outcome_model(c=c,m=0, a=a)  for c in C]
+    
+    proba_m = [mediator_model(c=c,a=astar)  for c in C]
+    gf = np.mean(g_hat_0*(1-proba_m)+g_hat_1*(proba_m))
+    return gf
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 def IPW(j, k, p, a, astar, data_all, e=None, e_2=None, clip_status=False):
     n_k = len(data_all[k])
     n_j = len(data_all[j])

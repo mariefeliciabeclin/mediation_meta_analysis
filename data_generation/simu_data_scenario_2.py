@@ -87,16 +87,35 @@ def simulate(n, mu, s, omega_dict : dict, beta_dict : dict, sigma2_dict : dict ,
 
 
 
+# def population_model( c, s = None):
+ #   r0 = exp(6+0.2*c)
+ #   r1 = exp(7-0.1*c)
+ #   r2 = exp(5+0.05*(c-6)**2)
+ #   d = r0+r1+r2
+  #  if s == 0:
+ #       return  r0/d
+  #  if s ==1 :
+  #      return  r1/d
+  #  if s==2 :
+  #      return  r3/d
+  #  if s is None:
+   #     return  [r0/d, r1/d,r2/d] """
+
 def population_model( c, s = None):
-    denominateur = exp(0.01+0.04*c)+ exp(0.05+0.05*c) + exp(0.1+0.06*c)
+    r0 = exp(6+0.2*c+0.001*(c-6)**2)
+    r1 = exp(7-0.05*c+0.05*(c-6)**2)
+    r2 = exp(4+0.05*(c-6)**2)
+    d = r0+r1+r2
     if s == 0:
-        return  exp(0.01+0.04*c)/denominateur 
+        return  r0/d
     if s ==1 :
-        return  exp(0.05+0.05*c)/denominateur
+        return  r1/d
     if s==2 :
-        return exp(0.1+0.06*c)/denominateur
+        return  r3/d
     if s is None:
-        return  [exp(0.01+0.04*c)/denominateur ,exp(0.05+0.05*c)/denominateur, exp(0.1+0.06*c)/denominateur]
+        return  [r0/d, r1/d,r2/d]
+
+
 
 def mediator_model(omega, c, a):
     return expit(omega[0]+omega[1]*c + omega[2]*a)

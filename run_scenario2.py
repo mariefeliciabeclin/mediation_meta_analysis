@@ -28,7 +28,7 @@ n3 = N // 4
 
   
 # -------- SimulationS--------
-n_sim = 50     # 
+n_sim = 20     # 
 
 print("ok")
 true_res_nde_0= dict({})
@@ -42,7 +42,7 @@ true_res_01 = dict({})
 true_res_nde_1 =dict({})
 true_res_nie_0 =dict({})
 
-params = dict( {"mu": 8, "s" : 4, "beta_dict" : dict({"beta_0" : [1,0.5,2,1], "beta_1" : [1, 0.5, 1, 0.8], "beta_2" : [1, 0.5, 0.2, 1.2]}), 
+params = dict( {"mu": 6, "s" : 10, "beta_dict" : dict({"beta_0" : [1,0.5,2,1], "beta_1" : [1, 0.5, 1, 0.8], "beta_2" : [1, 0.5, 0.2, 1.2]}), 
             "omega_dict": dict({"omega_0" : [0, 0.5, 0.2], "omega_1": [0, 0.5, 0.4], "omega_2" : [0, 0.5, 0.8]}),
             "sigma2_dict": dict({"pop0" :0.12  , "pop1" :0.12 , "pop2": 0.12})  })
 
@@ -60,18 +60,19 @@ for k, p in itertools.product(range(3), repeat=2):
         
     for j in range(3):
         s = f"s{j}"
-        true_res_nde_0[key][s] = true_value_scenario_2(j, k, p, 1, 0, params) - true_value_scenario_2(j, k, p, 0, 0, params)
-        true_res_nie_1[key][s] = true_value_scenario_2(j, k, p, 1, 1, params) - true_value_scenario_2(j, k, p, 1, 0, params)
-     
 
-        true_res_nde_1[key][s] = true_value_scenario_2(j, k, p, 1, 1, params) - true_value_scenario_2(j, k, p, 0, 1, params)
-        true_res_nie_0[key][s] = true_value_scenario_2(j, k, p, 0, 1, params) - true_value_scenario_2(j, k, p, 0, 0, params)
-     
         true_res_10[key][s] = true_value_scenario_2(j, k, p, 1, 0, params) 
         true_res_11[key][s] = true_value_scenario_2(j, k, p, 1, 1, params)   
         true_res_00[key][s] = true_value_scenario_2(j, k, p, 0, 0, params) 
         true_res_01[key][s] = true_value_scenario_2(j, k, p, 0, 1, params)   
 
+        true_res_nde_0[key][s] = true_res_10[key][s]  - true_res_00[key][s] 
+        true_res_nie_1[key][s] = true_res_11[key][s] - true_res_10[key][s]
+     
+
+        true_res_nde_1[key][s] = true_res_11[key][s] - true_res_01[key][s]
+        true_res_nie_0[key][s] = true_res_01[key][s]  - true_res_00[key][s]
+     
 results_11 = {key: {s : {"G_formula" : [], "IPW" : [],  "IPW_clip" : []} for s in ["s0", "s1", "s2"]} for key in true_res_nde_0}
 results_nie_1 = {key: {s : {"G_formula" : [], "IPW" : [],  "IPW_clip" : []} for s in ["s0", "s1", "s2"]} for key in true_res_nde_0}
 results_10 = {key: {s : {"G_formula" : [], "IPW" : [],  "IPW_clip" : []} for s in ["s0", "s1", "s2"]} for key in true_res_nde_0}
